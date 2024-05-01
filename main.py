@@ -1,8 +1,11 @@
 
 import csv
 
+from Models.DeliveryPackage import Package
+from Models.Packages_Hashtable import PackagesHashtable
 
-def load_package_data(filename):
+
+def load_package_data(filename, packages_hash_table):
     packageList = []
     with open(filename) as package_csv:
         reader = csv.DictReader(package_csv, ['package_id', 'address', 'city', 'state', 'zip', 'deadline', 'weight', 'special_notes'])
@@ -10,20 +13,17 @@ def load_package_data(filename):
         next(reader)
         for row in reader:
             packageList.append(row)
-            # print(row)
+            delivery_package = Package(row['package_id'], row['address'], row['city'], row['state'], row['zip'], row['deadline'], row['weight'], "At the hub")
+            packages_hash_table.insert(row['package_id'], delivery_package)
 
         return packageList
 
 
-packages = load_package_data('package_csv.csv')
+Packages_data = PackagesHashtable()
 
-print(packages[0]['deadline'])
+load_package_data('package_csv.csv', Packages_data)
 
-# class PackagesInfo:
-#     def __init__(self, key):
-#         self.hash_table = {}
+print(Packages_data.look('19'))
 
-
-    # def add_package(self, key, ):
 
 
