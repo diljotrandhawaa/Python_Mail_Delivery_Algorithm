@@ -20,12 +20,13 @@ def load_package_data(filename, packages_hash_table):
 
             # with Package ID as key in hashtable and all other info in Package class as the value mapped by key
             packages_hash_table.insert(package_row['package_id'], delivery_package)
+            packages_list.append(package_row['package_id'])
 
         return True
 
 
 modified_distance_data = []
-with open('distance_csv.csv') as distance_csv:
+with open('CSV/distance_csv.csv') as distance_csv:
     reader = csv.reader(distance_csv)
     next(reader)
     reader = list(reader)
@@ -137,7 +138,8 @@ def packages_delivery(truck):
 
 
 Packages_data = PackagesHashtable()
-load_package_data('package_csv.csv', Packages_data)
+packages_list = []
+load_package_data('CSV/package_csv.csv', Packages_data)
 
 truck1 = Truck('1', 16, 18, ['7', '29', '2', '33', '1', '4', '40', '12'], datetime.timedelta(hours=8), 0, datetime.timedelta(hours=8))
 truck2 = Truck('2', 16, 18, ['3', '5', '6', '8', '9', '18', '22', '24', '25', '26', '28', '31', '32', '35', '36', '38'], datetime.timedelta(hours=9, minutes=15), 0, datetime.timedelta(hours=9, minutes=15))
@@ -151,6 +153,13 @@ packages_delivery(truck3)
 
 # print(Packages_data.look('15'))
 
+# converts the time in format 'HH:MM:SS' to a dateTime object
+def convert_time_to_delta(user_time):
+    user_time_divided = user_time.split(':')
+    user_hours = int(user_time_divided[0])
+    user_minutes = int(user_time_divided[1])
+    user_seconds = int(user_time_divided[2])
+    return datetime.timedelta(hours=user_hours, minutes=user_minutes, seconds=user_seconds)
 
 # given package, this function returns the truck object the package is loaded in
 def find_truck_for_package(package):
@@ -179,9 +188,11 @@ def get_packages_at_this_time(time_given, packages_to_view):
             if time_given >= package.delivery_time:
                 packages[package_id].status = 'Delivered by Truck-' + package.truck_id
             else:
-                packages[package_id].status = 'En route by Truck-' + package.truck_id
+                packages[package_id].status = 'En route on Truck-' + package.truck_id
+                packages[package_id].delivery_time = 'Not yet delivered'
         else:
             packages[package_id].status = 'At the hub'
+            packages[package_id].delivery_time = 'Not yet delivered'
 
     for package_id in packages:
         print(packages[package_id])
@@ -195,11 +206,35 @@ class Main:
     print('The mileage travelled by trucks is: ')
     print(round(truck1.miles_travelled + truck2.miles_travelled + truck3.miles_travelled, 1), " miles")
 
-    time_to_give = datetime.timedelta(hours=8, minutes=15)
-    packages_to_view = ['7', '29', '2', '33', '1', '4', '40', '12']
+    time_to_give = datetime.timedelta(hours=9, minutes=25)
+    packages_to_view = ['1', '5', '15', '20', '34', '31']
 
-    print(get_packages_at_this_time(time_to_give, packages_to_view))
+    userInput1 = input("To start the program, please type the word 'Start'\n",)
+    if userInput1 == 'start' or userInput1 == 'Start':
+        try:
+            print("Here are your options:")
+            print("1. Print All Package Status and Total Mileage after Delivery")
+            print("2. Print All Package Status and Total Mileage at particular Time")
+            print("3. Get a Single Package Status at particular Time")
+            print("4. Get All Package Status at particular Time")
+            print("5.Get specific Packages Status at particular Time")
+            print("6. Exit the Program\n")
 
+            userInput2 = input("type in your option number like  '1' or '2'  and so on..\n")
+            if userInput2 == '1':
+                for key in packages_list:
+                    print(Packages_data.look(key))
+
+            elif userInput2 == '2':
+                userTimeInput = input("Enter Time in HH:MM:SS format(24-hours): ")
+                userTimeObj = convert_time_to_delta(userTimeInput)
+                get_packages_at_this_time(userTimeObj, packages_list)
+
+            else:
+                exit()
+        except ValueError:
+            print("Invalid Input")
+            exit()
 
 
 
