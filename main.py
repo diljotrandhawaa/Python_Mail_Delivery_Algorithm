@@ -1,6 +1,7 @@
 
 import csv
 import datetime
+import re
 
 from Models.Truck import Truck
 from Models.DeliveryPackage import Package
@@ -153,6 +154,32 @@ packages_delivery(truck3)
 
 # print(Packages_data.look('15'))
 
+def is_valid_packages_format()
+
+def is_valid_time_format(user_time):
+    # Define the regex pattern for the time format
+    pattern = re.compile(r'^\d{2}:\d{2}:\d{2}$')
+
+    # Check if the input string matches the pattern
+    if pattern.match(user_time):
+        user_time_divided = user_time.split(':')
+        user_hours = int(user_time_divided[0])
+        user_minutes = int(user_time_divided[1])
+        user_seconds = int(user_time_divided[2])
+        if 0 <= user_hours <= 24:
+            if 0 <= user_minutes <= 59:
+                if 0 <= user_seconds <= 59:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+        else:
+            return False
+    else:
+        return False
+
+
 # converts the time in format 'HH:MM:SS' to a dateTime object
 def convert_time_to_delta(user_time):
     user_time_divided = user_time.split(':')
@@ -181,6 +208,9 @@ def get_packages_at_this_time(time_given, packages_to_view):
     packages = {}
     for package_id in packages_to_view:
         package = Packages_data.look(package_id)
+        if package is None:
+            print('\nNo package found with ID: ' + package_id)
+            return
         package_truck = find_truck_for_package(package)
 
         packages[package_id] = package
@@ -194,6 +224,7 @@ def get_packages_at_this_time(time_given, packages_to_view):
             packages[package_id].status = 'At the hub'
             packages[package_id].delivery_time = 'Not yet delivered'
 
+    print("\n")
     for package_id in packages:
         print(packages[package_id])
     return packages
@@ -216,9 +247,8 @@ class Main:
             print("1. Print All Package Status and Total Mileage after Delivery")
             print("2. Print All Package Status and Total Mileage at particular Time")
             print("3. Get a Single Package Status at particular Time")
-            print("4. Get All Package Status at particular Time")
-            print("5.Get specific Packages Status at particular Time")
-            print("6. Exit the Program\n")
+            print("4.Get specific Packages Status at particular Time (more than one Package)")
+            print("5. Exit the Program\n")
 
             userInput2 = input("type in your option number like  '1' or '2'  and so on..\n")
             if userInput2 == '1':
@@ -226,14 +256,39 @@ class Main:
                     print(Packages_data.look(key))
 
             elif userInput2 == '2':
-                userTimeInput = input("Enter Time in HH:MM:SS format(24-hours): ")
-                userTimeObj = convert_time_to_delta(userTimeInput)
-                get_packages_at_this_time(userTimeObj, packages_list)
+                try:
+                    userTimeInput = input("Enter Time in HH:MM:SS format(24-hours): ")
+                    if not is_valid_time_format(userTimeInput):
+                        raise ValueError
+
+                    userTimeObj = convert_time_to_delta(userTimeInput)
+                    get_packages_at_this_time(userTimeObj, packages_list)
+                except ValueError:
+                    print("\nEntry invalid, exiting Program")
+                    exit()
+
+            elif userInput2 == '3':
+                try:
+                    userPackageInput = input("Enter Package ID: ")
+                    userTimeInput2 = input("Enter Time in HH:MM:SS format(24-hours): ")
+                    if not is_valid_time_format(userTimeInput2):
+                        raise ValueError
+                    userTimeObj2 = convert_time_to_delta(userTimeInput2)
+                    get_packages_at_this_time(userTimeObj2, [userPackageInput])
+                except ValueError:
+                    print("\nEntry invalid, exiting Program")
+                    exit()
+
+            # elif userInput2 == '4':
+            #     try:
+            #         userPackagesInput = input("Enter Packages id's separated by comma(no space): ")
+
 
             else:
+                print("\nInvalid Input")
                 exit()
         except ValueError:
-            print("Invalid Input")
+            print("\nInvalid Input")
             exit()
 
 
