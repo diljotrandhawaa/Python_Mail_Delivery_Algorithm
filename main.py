@@ -95,7 +95,6 @@ def packages_delivery(truck):
         Packages_data.look(package_id).truck_id = truck.id
         Packages_data.look(package_id).status = 'en route by Truck-', truck.id
 
-
     while len(truck.packages) > 0:
         min_dist = get_min_distance(Packages_data, starting_id, truck.packages)
 
@@ -103,6 +102,7 @@ def packages_delivery(truck):
         if min_dist[0] == '9':
             if truck.time > datetime.timedelta(hours=10, minutes=20):
                 Packages_data.look('9').address = '410 S State St'
+                Packages_data.look('9').pk_zip = '84111'
                 truck.packages.append('9')
                 min_dist = get_min_distance(Packages_data, starting_id, truck.packages)
             else:
@@ -119,7 +119,7 @@ def packages_delivery(truck):
         delivered_package = Packages_data.look(min_dist[0])
 
         # changes package's status from 'At the hub' to 'Delivered'
-        delivered_package.status = 'Delivered by Truck-'+ delivered_package.truck_id
+        delivered_package.status = 'Delivered by Truck-' + delivered_package.truck_id
 
         # calculates current time and put it into package's delivery time
         total_minutes = (truck.miles_travelled / truck.speed) * 60
@@ -149,13 +149,27 @@ truck3 = Truck('3', 16, 18, ['10', '11', '13', '14', '15', '16', '17', '19', '20
 packages_delivery(truck1)
 packages_delivery(truck2)
 packages_delivery(truck3)
+total_mileage = truck1.miles_travelled + truck2.miles_travelled + truck3.miles_travelled
 
-# print(find_truck_for_package(Packages_data.look('7')))
 
-# print(Packages_data.look('15'))
+# ----------------------- UI functions and class -----------------------
 
-def is_valid_packages_format()
+# The function below checks if the string passed by user in option 4 of UI menu is valid
+# to do that, it splits the string into an array and check if each id is a valid digit between 1 and 40
+def is_valid_packages_format(user_packages_string):
+    user_packages_list = user_packages_string.split(',')
 
+    for package_id in user_packages_list:
+        if not package_id.strip().isdigit():
+            return False
+        else:
+            if int(package_id) < 1 or int(package_id) > len(packages_list):
+                return False
+    return True
+
+
+# The function below checks if the time entered by user is valid
+# it does that by comparing it to regex string and if hours, mins and secs are under 60
 def is_valid_time_format(user_time):
     # Define the regex pattern for the time format
     pattern = re.compile(r'^\d{2}:\d{2}:\d{2}$')
@@ -255,6 +269,8 @@ class Main:
                 for key in packages_list:
                     print(Packages_data.look(key))
 
+                print("\nThe Total mileage of all 3 trucks is: ", round(total_mileage, 1), " miles")
+
             elif userInput2 == '2':
                 try:
                     userTimeInput = input("Enter Time in HH:MM:SS format(24-hours): ")
@@ -263,6 +279,7 @@ class Main:
 
                     userTimeObj = convert_time_to_delta(userTimeInput)
                     get_packages_at_this_time(userTimeObj, packages_list)
+                    print("\nThe Total mileage of all 3 trucks is: ", round(total_mileage, 1), " miles")
                 except ValueError:
                     print("\nEntry invalid, exiting Program")
                     exit()
@@ -270,19 +287,39 @@ class Main:
             elif userInput2 == '3':
                 try:
                     userPackageInput = input("Enter Package ID: ")
+                    if int(userPackageInput) < 1 or int(userPackageInput) > len(packages_list):
+                        print("\nPackage ID is invalid, exiting Program")
+                        exit()
                     userTimeInput2 = input("Enter Time in HH:MM:SS format(24-hours): ")
                     if not is_valid_time_format(userTimeInput2):
                         raise ValueError
                     userTimeObj2 = convert_time_to_delta(userTimeInput2)
                     get_packages_at_this_time(userTimeObj2, [userPackageInput])
                 except ValueError:
-                    print("\nEntry invalid, exiting Program")
+                    print("\nTime entry is invalid, exiting Program")
                     exit()
 
-            # elif userInput2 == '4':
-            #     try:
-            #         userPackagesInput = input("Enter Packages id's separated by comma(no space): ")
+            elif userInput2 == '4':
+                try:
+                    userPackagesInput = input("Enter Packages id's separated by comma(no space): ")
+                    if not is_valid_packages_format(userPackagesInput):
+                        raise ValueError
+                    userTimeInput4 = input("Enter Time in HH:MM:SS format(24-hours): ")
+                    if not is_valid_time_format(userTimeInput4):
+                        print("\nTime entered is invalid, exiting Program")
+                        exit()
+                    userTimeObj4 = convert_time_to_delta(userTimeInput4)
+                    userPackagesList = userPackagesInput.split(',')
+                    userPackagesList = [package.strip() for package in userPackagesList]
+                    get_packages_at_this_time(userTimeObj4, userPackagesList)
 
+                except ValueError:
+                    print("\nPackages list is invalid, exiting Program")
+                    exit()
+
+            elif userInput2 == '5':
+                print("Exiting Program")
+                exit()
 
             else:
                 print("\nInvalid Input")
