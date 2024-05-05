@@ -26,17 +26,20 @@ def load_package_data(filename, packages_hash_table):
         return True
 
 
+# loads the distance_csv file into a list by first manipulating the data
 modified_distance_data = []
 with open('CSV/distance_csv.csv') as distance_csv:
     reader = csv.reader(distance_csv)
     next(reader)
     reader = list(reader)
     for distance_row in reader:
+        # manipulate the address to only include the street address before adding it into the list
         modified_address1 = distance_row[1].split('\n')
         distance_row[1] = modified_address1[0].strip()
         modified_distance_data.append(distance_row)
 
 
+# Calculates the distance between two addresses by using the distance list
 def calculate_distance(address1, address2):
     address1 = address1.strip()
     address2 = address2.strip()
@@ -56,10 +59,6 @@ def calculate_distance(address1, address2):
         return modified_distance_data[index1][index2 + 2]
     return modified_distance_data[index2][index1 + 2]
 
-# datetime.timedelta(hours=9, minutes=5))
-# truck3 = Truck(16, 18, [], datetime.timedelta())
-#
-#
 
 # Function to find minimum from starting address's package id to all remaining packages yet to be delivered
 # uses packages hashtable to find the distance of each package address from the starting address using package_id's
@@ -87,14 +86,18 @@ def get_min_distance(packages_data, starting_id, packages_id_list):
     return [min_distance_id, min_distance]
 
 
+# The algorithm to deliver Packages, uses the Nearest Neighbor ideology
 def packages_delivery(truck):
     packages_delivery_list = []
     starting_id = '0'
 
+    # adds the truck_id of the truck to the package object
     for package_id in truck.packages:
         Packages_data.look(package_id).truck_id = truck.id
         Packages_data.look(package_id).status = 'en route by Truck-', truck.id
 
+    # until truck's packages list is empty, deliver the package, add miles into truck,
+    # changes Package's status, changes Truck's time and Package's delivery time
     while len(truck.packages) > 0:
         min_dist = get_min_distance(Packages_data, starting_id, truck.packages)
 
@@ -130,22 +133,29 @@ def packages_delivery(truck):
         # update the truck's real time as well
         truck.time = current_time
 
+        # set the starting address to the address of recently delivered package
         starting_id = min_dist[0]
 
+    # Updates the parameters of Truck when it returns back to the HUB like it's miles travelled
     last_address = Packages_data.look(packages_delivery_list[len(packages_delivery_list) - 1][0]).address
     truck.miles_travelled += float(calculate_distance('HUB', last_address))
     truck.miles_travelled = round(truck.miles_travelled, 1)
     return packages_delivery_list
 
 
+# Creates an instance of class Packages_data
 Packages_data = PackagesHashtable()
 packages_list = []
+
+# loads the Package_csv file
 load_package_data('CSV/package_csv.csv', Packages_data)
 
+# Loads Trucks
 truck1 = Truck('1', 16, 18, ['7', '29', '2', '33', '1', '4', '40', '12'], datetime.timedelta(hours=8), 0, datetime.timedelta(hours=8))
 truck2 = Truck('2', 16, 18, ['3', '5', '6', '8', '9', '18', '22', '24', '25', '26', '28', '31', '32', '35', '36', '38'], datetime.timedelta(hours=9, minutes=15), 0, datetime.timedelta(hours=9, minutes=15))
 truck3 = Truck('3', 16, 18, ['10', '11', '13', '14', '15', '16', '17', '19', '20', '21', '23', '27', '30', '34', '37', '39'], datetime.timedelta(hours=8), 0, datetime.timedelta(hours=8))
 
+# Delivers Packages using all three trucks
 packages_delivery(truck1)
 packages_delivery(truck2)
 packages_delivery(truck3)
@@ -202,6 +212,7 @@ def convert_time_to_delta(user_time):
     user_seconds = int(user_time_divided[2])
     return datetime.timedelta(hours=user_hours, minutes=user_minutes, seconds=user_seconds)
 
+
 # given package, this function returns the truck object the package is loaded in
 def find_truck_for_package(package):
     package_truck = ''
@@ -247,7 +258,7 @@ def get_packages_at_this_time(time_given, packages_to_view):
 # the class Main is for UI, takes user input and prints the data requested by user
 class Main:
     print('Western Governors University C950')
-    print('Student ID: Diljot Singh')
+    print('Student ID: 011085296')
     print('The mileage travelled by trucks is: ')
     print(round(truck1.miles_travelled + truck2.miles_travelled + truck3.miles_travelled, 1), " miles")
 
